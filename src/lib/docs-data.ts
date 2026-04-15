@@ -50,6 +50,7 @@ export const sidebarData: SidebarGroup[] = [
     links: [
       { title: 'Architecture', href: '/docs/reference/architecture' },
       { title: 'Manifest reference', href: '/docs/reference/manifest' },
+      { title: 'Source script', href: '/docs/reference/source-script' },
       { title: 'SDK API reference', href: '/docs/reference/sdk-api' },
       { title: 'Data models', href: '/docs/reference/data-models' },
       { title: 'Filter system', href: '/docs/reference/filter-system' },
