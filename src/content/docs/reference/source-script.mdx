@@ -1,0 +1,110 @@
+---
+title: Source Script (source.js)
+description: The formal technical specification for the Novon extension runtime environment.
+---
+
+# Source Script Specification
+
+This document defines the **strict contract** between the Novon Dart engine and the `source.js` extension script. Every extension must implement this interface to be compatible with the application.
+
+> [!IMPORTANT]
+> All functions must be registered in the **global scope** (`globalThis`). The engine will automatically locate and register them during the extension initialization sequence.
+
+---
+
+## Environment & Globals
+
+The Novon engine uses a high-performance JavaScript runtime (QuickJS) with several injected global utilities.
+
+### `http.get(url: string): Promise<string>`
+An asynchronous function that performs a GET request with the application's global User-Agent.
+- **Returns**: The raw HTML response as a string.
+- **Throws**: An error on network failure (4xx/5xx status codes).
+
+### `parseHtml(html: string): Document`
+A high-fidelity HTML parser tailored for web novel scraping.
+- **Returns**: A `Document` object compatible with common selector APIs.
+- **Supported APIs**:
+  - `doc.querySelector(selector: string)`: Returns a single `Node`.
+  - `doc.querySelectorAll(selector: string)`: Returns an array of `Node` objects.
+  - `node.attr(name: string)`: Returns the value of the specified attribute.
+  - `node.text`: A property containing the clean text content of the node.
+  - `node.innerHTML`: A property containing the raw inner HTML of the node.
+
+---
+
+## Core Interface functions
+
+The following six functions are **mandatory**. Failure to implement any of these will prevent the extension from registering.
+
+### 1. `fetchPopular(page: number)`
+Retrieves a list of popular novels from the source.
+- **Returns**: `Promise<{ novels: Novel[], hasNextPage: boolean }>`
+
+### 2. `fetchLatestUpdates(page: number)`
+Retrieves a list of recently updated novels.
+- **Returns**: `Promise<{ novels: Novel[], hasNextPage: boolean }>`
+
+### 3. `search(query: string, page: number)`
+Performs a keyword search on the source.
+- **Returns**: `Promise<{ novels: Novel[], hasNextPage: boolean }>`
+
+### 4. `fetchNovelDetail(novelUrl: string)`
+Retrieves full metadata for a specific novel.
+- **Returns**: `Promise<NovelDetail>`
+
+### 5. `fetchChapterList(novelUrl: string)`
+Retrieves the complete list of chapters for a novel.
+- **Returns**: `Promise<Chapter[]>`
+- **Ordering**: The engine expects chapters in chronological order (First chapter first).
+
+### 6. `fetchChapterContent(chapterUrl: string)`
+Retrieves the reading content for a specific chapter.
+- **Returns**: `Promise<{ html: string }>`
+
+---
+
+## Data Schemas
+
+### `Novel`
+A summary object used in browsing and search results.
+```typescript
+{
+  url: string;      // The absolute URL to the novel page
+  title: string;    // The display title
+  coverUrl: string; // The absolute URL to the cover image
+}
+```
+
+### `NovelDetail`
+Extended metadata for the library and cover pages.
+```typescript
+{
+  url: string;
+  title: string;
+  author: string;
+  description: string;
+  status: 'ongoing' | 'completed' | 'hiatus' | 'unknown';
+  genres: string[];
+  coverUrl: string;
+}
+```
+
+### `Chapter`
+A single entry in a novel's table of contents.
+```typescript
+{
+  url: string;      // Absolute URL to the reading page
+  name: string;     // The chapter title (e.g., "Chapter 10")
+  number: number | null; // The numerical index (used for sorting)
+}
+```
+
+---
+
+## Implementation Rules
+
+1. **Absolute URLs**: Every URL returned by the extension (novels, chapters, covers) **MUST** be absolute (e.g., `https://source.com/novel/123`).
+2. **Serialization**: Any data returned must be JSON-serializable. Avoid returning raw DOM nodes or complex circular objects.
+3. **Timeouts**: The engine enforces a **30-second timeout** on all JS calls. Ensure your logic handles pagination and heavy requests efficiently.
+4. **Safety**: Do not use `eval()` or attempt to access native device APIs. The execution environment is strictly sandboxed.
