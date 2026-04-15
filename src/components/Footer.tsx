@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-links">
-          <a href="https://github.com/novon-app/novon" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/novonapp/novon" target="_blank" rel="noopener">GitHub</a>
           <a href="https://discord.gg/novon" target="_blank" rel="noopener">Discord</a>
           <a href="/docs/guides/getting-started">Documentation</a>
           <a href="/docs/general/contribute">Contribute</a>

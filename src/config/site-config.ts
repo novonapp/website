@@ -4,9 +4,9 @@ export const SITE_CONFIG = {
   status: "Alpha",
   apiVersion: "1",
   links: {
-    github: "https://github.com/novon-app",
-    releases: "https://github.com/novon-app/novon/releases",
-    latestApk: "https://github.com/novon-app/novon/releases/latest",
+    github: "https://github.com/novonapp",
+    releases: "https://github.com/novonapp/novon/releases",
+    latestApk: "https://github.com/novonapp/novon/releases/latest",
     discord: null,
     twitter: null,
     facebook: null,
