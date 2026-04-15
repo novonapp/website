@@ -6,6 +6,7 @@ import TableOfContents from '@/components/TableOfContents';
 import { CodeBlock, Callout, Tabs, Icon } from '@/components/mdx-components';
 import Link from 'next/link';
 import { findCurrentGroup } from '@/lib/docs-data';
+import { SITE_CONFIG } from '@/config/site-config';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }) {
   const resolvedParams = await params;
@@ -24,10 +25,8 @@ const components = {
   a: (props: any) => <a {...props} target={props.href?.startsWith('http') ? '_blank' : '_self'} rel="noopener" />,
   table: (props: any) => <div className="table-wrapper"><table {...props} /></div>,
   code: (props: any) => {
-
     const isInline = !props.className;
     if (isInline) return <code {...props} />;
-    
     return <code {...props} />;
   },
   pre: (props: any) => {
@@ -41,6 +40,9 @@ const components = {
   Tabs,
   CodeBlock,
   Icon,
+  AppVersion: () => <span>{SITE_CONFIG.version}</span>,
+  ApiVersion: () => <span>{SITE_CONFIG.apiVersion}</span>,
+  AppStatus: () => <span>{SITE_CONFIG.status}</span>,
 };
 
 async function AsyncCodeBlock({ code, lang }: { code: string, lang: string }) {

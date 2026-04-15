@@ -26,6 +26,10 @@
 
 This repository contains the source code for the official Novon Documentation website. Built with **Next.js 15** and **MDX**, it provides a lightning-fast, highly readable experience for developers and users alike.
 
+> [!NOTE]
+> **A Note from the Author:**
+> Since English is not my first language, I utilize AI agents to help maintain and refine this documentation. This collaboration allows me to document new features and architectural changes much faster and more effectively, ensuring the information remains clear, professional, and up-to-date for everyone.
+
 
 This site features a premium obsidian-toned dark mode with high-contrast typography, subtle glassmorphism, and smooth interactive transitions.
 

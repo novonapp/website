@@ -1,6 +1,7 @@
 import { Smartphone, Monitor, Apple, Cpu, ShieldCheck, Code } from 'lucide-react';
 import Footer from '@/components/Footer';
 import type { Metadata } from 'next';
+import { SITE_CONFIG } from '@/config/site-config';
 
 export const metadata: Metadata = { 
   title: 'Download | Novon', 
@@ -15,7 +16,7 @@ export default function DownloadPage() {
       title: 'Novon for Android',
       description: 'The definitive mobile experience. Full source support and hardware-accelerated reading.',
       requirement: 'Android 8.0+',
-      link: 'https://github.com/novon-app/novon/releases/latest',
+      link: SITE_CONFIG.links.latestApk || '#',
       action: 'Download APK',
       primary: true
     },
@@ -25,7 +26,7 @@ export default function DownloadPage() {
       title: 'Novon for Windows',
       description: 'Native desktop application with multi-window support and keyboard navigation.',
       requirement: 'Windows 10/11 x64',
-      link: 'https://github.com/novon-app/novon/releases/latest',
+      link: SITE_CONFIG.links.releases || '#',
       action: 'Download EXE'
     },
     {
@@ -34,7 +35,7 @@ export default function DownloadPage() {
       title: 'Novon for macOS',
       description: 'Optimized for Apple Silicon and Intel Macs. Smooth scrolling and native menus.',
       requirement: 'macOS Monterey+',
-      link: 'https://github.com/novon-app/novon/releases/latest',
+      link: SITE_CONFIG.links.releases || '#',
       action: 'Download DMG'
     },
     {
@@ -43,7 +44,7 @@ export default function DownloadPage() {
       title: 'Novon for Linux',
       description: 'Universal AppImage build compatible with most modern distributions.',
       requirement: 'glibc 2.31+',
-      link: 'https://github.com/novon-app/novon/releases/latest',
+      link: SITE_CONFIG.links.releases || '#',
       action: 'Download AppImage'
     }
   ];
@@ -102,7 +103,7 @@ export default function DownloadPage() {
             verifying the SHA-256 hash of your downloaded file against the official release notes.
           </p>
           <div style={{ marginTop: '24px' }}>
-            <a href="https://github.com/novon-app/novon" className="sidebar-link" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0', background: 'none' }}>
+            <a href={SITE_CONFIG.links.github || '#'} className="sidebar-link" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0', background: 'none' }}>
               <Code size={16} />
               View Source on GitHub
             </a>

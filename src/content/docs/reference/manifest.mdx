@@ -13,8 +13,8 @@ The Flutter App parses this file using a generated `Freezed` schema before loadi
 |---|---|---|
 | `id` | `string` | Unique identifier. We require reverse domain notation mapping (`com.test.source`). |
 | `name` | `string` | Human-readable GUI title (`Novels.com`). |
-| `version` | `string` | Semantic extension logic version (`1.2.0`). |
-| `apiVersion` | `string` | SDK bridge target version (currently `2`). |
+| `version` | `string` | Semantic extension logic version (`{{APP_VERSION}}`). |
+| `apiVersion` | `string` | SDK bridge target version (currently `{{API_VERSION}}`). |
 | `minAppVersion` | `string` | String mapping for the minimum supported Novon semantic version. |
 | `lang` | `string` | ISO 639-1 language code (`en`, `es`, `zh`). Use `all` if multilingual natively. |
 | `baseUrl` | `string` | The primary endpoint URL. |

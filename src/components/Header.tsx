@@ -2,11 +2,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from './ThemeProvider';
-import { Sun, Moon, X, Search, ChevronDown, Plus } from 'lucide-react';
-
+import { X, Search, ChevronDown, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { sidebarData } from '@/lib/docs-data';
 import SearchModal from './SearchModal';
+import { SITE_CONFIG } from '@/config/site-config';
 
 const GithubIcon = () => (
   <svg
@@ -110,9 +109,9 @@ export default function Header() {
               <span className="header-logo-text">Novon</span>
             </Link>
 
-            <button 
-              type="button" 
-              className="header-search-box" 
+            <button
+              type="button"
+              className="header-search-box"
               aria-label="Search (Ctrl+K)"
               onClick={() => setIsSearchOpen(true)}
             >
@@ -120,25 +119,26 @@ export default function Header() {
               <span className="header-search-label">Search</span>
               <kbd className="header-search-kbd">Ctrl K</kbd>
             </button>
-
           </div>
 
           <div className="header-right">
             <nav className="header-nav" aria-label="Main">
               <details className="nav-version-dropdown">
                 <summary className="nav-version-summary">
-                  <span>Get v1.0.0</span>
+                  <span>Get {SITE_CONFIG.status} v{SITE_CONFIG.version}</span>
                   <ChevronDown size={14} strokeWidth={2.5} className="nav-version-chevron" />
                 </summary>
                 <div className="nav-version-panel">
                   <Link href="/download">Download</Link>
-                  <a
-                    href="https://github.com/novon-app/novon/releases"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Releases
-                  </a>
+                  {SITE_CONFIG.links.releases && (
+                    <a
+                      href={SITE_CONFIG.links.releases}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Releases
+                    </a>
+                  )}
                 </div>
               </details>
               <Link
@@ -153,23 +153,32 @@ export default function Header() {
             </nav>
 
             <div className="header-actions">
-
               <div className="social-links" aria-label="Social">
-                <a href="https://github.com/novon-app/novon" target="_blank" rel="noopener noreferrer">
-                  <GithubIcon />
-                </a>
-                <a href="https://discord.gg/novon" target="_blank" rel="noopener noreferrer">
-                  <DiscordIcon />
-                </a>
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="X">
-                  <TwitterIcon />
-                </a>
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                  <FacebookIcon />
-                </a>
-                <a href="https://reddit.com" target="_blank" rel="noopener noreferrer" aria-label="Reddit">
-                  <RedditIcon />
-                </a>
+                {SITE_CONFIG.links.github && (
+                  <a href={SITE_CONFIG.links.github} target="_blank" rel="noopener noreferrer">
+                    <GithubIcon />
+                  </a>
+                )}
+                {SITE_CONFIG.links.discord && (
+                  <a href={SITE_CONFIG.links.discord} target="_blank" rel="noopener noreferrer">
+                    <DiscordIcon />
+                  </a>
+                )}
+                {SITE_CONFIG.links.twitter && (
+                  <a href={SITE_CONFIG.links.twitter} target="_blank" rel="noopener noreferrer" aria-label="X">
+                    <TwitterIcon />
+                  </a>
+                )}
+                {SITE_CONFIG.links.facebook && (
+                  <a href={SITE_CONFIG.links.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                    <FacebookIcon />
+                  </a>
+                )}
+                {SITE_CONFIG.links.reddit && (
+                  <a href={SITE_CONFIG.links.reddit} target="_blank" rel="noopener noreferrer" aria-label="Reddit">
+                    <RedditIcon />
+                  </a>
+                )}
               </div>
             </div>
 
@@ -181,7 +190,6 @@ export default function Header() {
             >
               {mobileOpen ? <X size={22} /> : <CustomMenuIcon size={22} />}
             </button>
-
           </div>
         </div>
       </header>
@@ -194,8 +202,8 @@ export default function Header() {
               <span className="header-logo-text">Novon</span>
             </Link>
             <div className="mobile-drawer-actions">
-              <button 
-                aria-label="Search" 
+              <button
+                aria-label="Search"
                 className="mobile-drawer-btn"
                 onClick={() => {
                   setMobileOpen(false);
@@ -213,7 +221,7 @@ export default function Header() {
 
           <div className="mobile-drawer-content">
             <Link href="/download" className="mobile-version-card" onClick={() => setMobileOpen(false)}>
-              <span>Get v1.0.0</span>
+              <span>Get {SITE_CONFIG.status} v{SITE_CONFIG.version}</span>
               <Plus size={18} />
             </Link>
 
@@ -225,20 +233,21 @@ export default function Header() {
             <div className="mobile-drawer-spacer" />
 
             <div className="mobile-drawer-socials">
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer"><GithubIcon /></a>
-              <a href="https://discord.gg/novon" target="_blank" rel="noopener noreferrer"><DiscordIcon /></a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"><TwitterIcon /></a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"><FacebookIcon /></a>
-              <a href="https://reddit.com" target="_blank" rel="noopener noreferrer"><RedditIcon /></a>
+              {SITE_CONFIG.links.github && <a href={SITE_CONFIG.links.github} target="_blank" rel="noopener noreferrer"><GithubIcon /></a>}
+              {SITE_CONFIG.links.discord && <a href={SITE_CONFIG.links.discord} target="_blank" rel="noopener noreferrer"><DiscordIcon /></a>}
+              {SITE_CONFIG.links.twitter && <a href={SITE_CONFIG.links.twitter} target="_blank" rel="noopener noreferrer"><TwitterIcon /></a>}
+              {SITE_CONFIG.links.facebook && <a href={SITE_CONFIG.links.facebook} target="_blank" rel="noopener noreferrer"><FacebookIcon /></a>}
+              {SITE_CONFIG.links.reddit && <a href={SITE_CONFIG.links.reddit} target="_blank" rel="noopener noreferrer"><RedditIcon /></a>}
             </div>
           </div>
         </div>
       )}
 
-      <SearchModal 
-        isOpen={isSearchOpen} 
-        onClose={() => setIsSearchOpen(false)} 
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
       />
     </>
   );
 }
+

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { createHighlighter, Highlighter } from 'shiki';
+import { SITE_CONFIG } from '@/config/site-config';
 
 const CONTENT_DIR = path.join(process.cwd(), 'src/content/docs');
 
@@ -34,7 +35,14 @@ export async function getDocBySlug(slug: string[]): Promise<DocContent | null> {
   if (!fs.existsSync(fullPath)) return null;
 
   const fileContents = fs.readFileSync(fullPath, 'utf8');
-  const { data, content } = matter(fileContents);
+  let { data, content } = matter(fileContents);
+
+  content = content
+    .replaceAll('{{APP_VERSION}}', SITE_CONFIG.version)
+    .replaceAll('{{API_VERSION}}', SITE_CONFIG.apiVersion)
+    .replaceAll('{{APP_STATUS}}', SITE_CONFIG.status)
+    .replaceAll('{{GITHUB_URL}}', SITE_CONFIG.links.github || '')
+    .replaceAll('{{DOWNLOAD_URL}}', SITE_CONFIG.links.latestApk || '');
 
   return {
     meta: data as DocMeta,

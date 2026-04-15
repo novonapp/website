@@ -20,7 +20,7 @@ my-repo/
 │   ├── com.example.source1.png
 │   └── com.example.source2.png
 └── bundles/
-    ├── com.example.source1-1.0.0.novext
+    ├── com.example.source1-{{APP_VERSION}}.novext
     └── com.example.source2-2.1.0.novext
 ```
 
@@ -36,14 +36,14 @@ The app periodically fetches `index.json` to discover new extensions and updates
   "repoUrl": "https://raw.githubusercontent.com/username/repo/main/index.json",
   "maintainerUrl": "https://github.com/Username",
   "generated": "2026-04-14T09:12:00Z",
-  "apiVersion": "2",
+  "apiVersion": "1",
   "extensions": [
     {
       "id": "com.novon.kolnovel",
       "name": "KolNovel",
       "version": "1.3.4",
-      "apiVersion": "2",
-      "minAppVersion": "1.0.0",
+      "apiVersion": "{{API_VERSION}}",
+      "minAppVersion": "{{APP_VERSION}}",
       "lang": "ar",
       "nsfw": false,
       "hasCloudflare": true,
