@@ -1,0 +1,21 @@
+---
+title: General FAQ
+description: Frequently asked questions about Novon.
+---
+
+### Is Novon free?
+Yes. Novon is 100% free, open-source, and contains zero advertisements or telemetry tracking.
+
+### Is Novon available on iOS?
+Yes, but Apple's App Store policies regarding dynamic code execution (like our JavaScript extensions) make it difficult to publish officially. Currently, you must use TestFlight or sideload the `.ipa` using AltStore/Sideloadly.
+
+### Does Novon host the novels?
+No. Novon is merely a specialized web browser. It extracts and formats text from websites that you direct it to via extensions. We do not host, store, or distribute any copyrighted novel content.
+
+### Why do some sources fail with a 503 error?
+This usually means the source website has enabled strict Cloudflare "Under Attack" mode protections that our WebView bypass cannot solve automatically (e.g. Turnstile CAPTCHAs that require manual tapping).
+You can sometimes fix this by opening the website in your normal phone browser, solving the CAPTCHA there, and then returning to Novon.
+
+### How do I use WebDAV backups?
+WebDAV allows you to sync your encrypted library backups to an external server like Nextcloud. Go to **Settings > Data & Storage > WebDAV Sync** and enter your server's endpoint URL and credentials. 
+Backups will automatically push to the server whenever the background auto-backup job runs.

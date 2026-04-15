@@ -1,0 +1,20 @@
+---
+title: Compliance Test Suites
+description: Ensuring your extension meets the standard.
+---
+
+Before submitting an extension to the official `novon-extensions` repository on GitHub, it must pass the compliance test suite.
+
+## The CLI Tester
+You can test your extension locally using the NodeJS runner located in the official repo at `src/test/runner.js`.
+
+```bash
+node runner.js com.novon.mysource
+```
+
+This will mock the Novon `http` injection and verify:
+1. `fetchPopular` returns novels.
+2. The URL is absolute.
+3. The cover image resolves.
+4. `fetchChapterList` returns chapters.
+5. The parsed HTML for the first chapter matches our quality thresholds (e.g. no script tags, length > 100 chars).

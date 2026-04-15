@@ -1,0 +1,41 @@
+---
+title: Tracking
+description: Synchronize your reading progress with external trackers like AniList and MyAnimeList.
+---
+
+Novon supports two-way synchronization with popular anime/manga/novel tracking services. 
+
+## Supported Services
+
+Currently, Novon supports the following trackers:
+- **AniList** (Recommended)
+- **MyAnimeList**
+- **NovelUpdates**
+- **Kitsu**
+- **Kavita** (Self-hosted)
+
+## Setting up a Tracker
+
+1. Go to **Settings > Tracking**.
+2. Tap the **Connect** button next to the tracker you wish to use.
+3. This will launch an in-app browser window (OAuth WebView flow) requesting permission to access your tracking account.
+4. Once authorized, the status will change to *Connected as [Username]*.
+
+<Callout type="tip" title="Data Privacy">
+Your OAuth tokens are stored securely on your device. Novon does not have a central server, so your login credentials are exchanged directly between your phone and the tracking service API. They are never sent to a third party.
+</Callout>
+
+## Automating the Sync
+
+Once connected, you can configure how Novon pushes data to the tracker. Expand the tracker card to see these options:
+
+- **Auto-Sync on Chapter Read:** Every time you finish reading a chapter and it marks as *read*, Novon silently communicates with the tracker API to update your current chapter count.
+- **Update Score Automatically:** If you rate a novel within Novon's library UI, it will push that score to the tracker.
+- **Mark as Completed:** When you read the absolute final chapter of a novel marked as "Completed", Novon will change your tracker status from "Reading" to "Completed".
+- **Sync Reading Status:** Pushes "Plan to Read", "Dropped", or "Reading" based on where the novel is in your Novon library categories.
+
+## Tracking Exceptions
+
+Sometimes the title of a novel on a source website (e.g., *Wuxiaworld*) doesn't perfectly match the title on AniList.
+
+In this case, open the novel in Novon, tap the **Tracking** icon in the header, and use the search bar to manually bind the source novel to the correct AniList entry.

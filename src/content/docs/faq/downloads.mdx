@@ -1,0 +1,25 @@
+---
+title: Downloads FAQ
+description: Common questions about downloading chapters.
+---
+
+### Where are downloaded chapters stored?
+Downloaded chapters are stored as raw text or HTML payloads inside your configured storage directory. By default, these are located in the `downloads/` folder within your Novon storage root.
+
+<Callout type="info" title="Storage Configuration">
+You can view or change your current storage root in <Icon name="Settings" /> **Data Settings > Storage Location**.
+</Callout>
+
+### Can I export downloaded chapters as EPUB or PDF?
+Novon is primarily a specialized reader rather than an export utility. While we are investigating community interest in EPUB bundling, there is currently no official support for exporting local chapters to external formats.
+
+### Downloads are stuck at pending
+If your download queue is stalled, please verify the following:
+
+1. **Active Connectivity:** Ensure you have a stable network connection.
+2. **Wi-Fi Constraints:** Check if **Wi-Fi Only Downloads** is toggled on in your settings while you are using cellular data.
+3. **Storage Health:** Ensure your device has sufficient remaining disk space and that Novon has write permissions for your selected storage folder.
+
+<Callout type="warning" title="IP Bans">
+Rapidly downloading thousands of chapters from a single source may trigger automated security blocks (like Cloudflare challenges) on the source website. Novon automatically implements rate-limiting to minimize this risk.
+</Callout>

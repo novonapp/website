@@ -1,0 +1,40 @@
+---
+title: Manifest Reference
+description: The complete schema for the extension manifest.json file.
+---
+
+When distributing an extension inside a `.novext` bundle or hosting an extension repository index, the `manifest.json` file serves as the strict, single source of truth for the properties supported by the Dart client engine.
+
+The Flutter App parses this file using a generated `Freezed` schema before loading any Javascript context into memory.
+
+## Required Properties
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier. We require reverse domain notation mapping (`com.test.source`). |
+| `name` | `string` | Human-readable GUI title (`Novels.com`). |
+| `version` | `string` | Semantic extension logic version (`1.2.0`). |
+| `apiVersion` | `string` | SDK bridge target version (currently `2`). |
+| `minAppVersion` | `string` | String mapping for the minimum supported Novon semantic version. |
+| `lang` | `string` | ISO 639-1 language code (`en`, `es`, `zh`). Use `all` if multilingual natively. |
+| `baseUrl` | `string` | The primary endpoint URL. |
+| `domains` | `string[]` | Crucial security whitelist. Your JS logic is completely firewalled and will drop requests to hosts not present here. |
+| `sha256` | `string` | Cryptographic signature of the raw ZIP bundle verifying integrity. |
+| `sourceUrl` | `string` | URL pointing back to the raw `.novext` bundle stream. |
+| `updateUrl` | `string` | A pingable URL hosting an identical JSON schema array for detecting upgrades in the background. |
+
+## Optional Properties
+| Field | Type | Description |
+|---|---|---|
+| `maxAppVersion` | `string?` | A hard-ceiling Novon semantic version blocking installations. |
+| `categories` | `string[]` | Defaults to an empty array. |
+| `nsfw` | `boolean` | Flags domains with explicit 18+ content. Settings default blocks these. |
+| `hasCloudflare` | `boolean` | Initiates the heavy `WebView` bypass cookie parser instead of raw Dart proxies. |
+| `supportsLatest` | `boolean` | Does the JS `fetchLatestUpdates()` function exist? |
+| `supportsSearch` | `boolean` | Does the JS `search()` function exist? |
+| `supportsFilters` | `boolean` | Does the JS `getFilters()` feature work correctly? |
+| `icon` | `string` | Internal ZIP bundle root file, exclusively `icon.png`. |
+| `authorName` | `string?` | Developer identity handling source complaints. |
+| `authorUrl` | `string?` | External URL link. |
+| `changelog` | `string?` | Markdown text appended to the local installation database UI element. |
+| `tags` | `string[]` | Local UI filter taxonomy. |

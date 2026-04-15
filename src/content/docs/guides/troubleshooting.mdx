@@ -1,0 +1,39 @@
+---
+title: Troubleshooting
+description: Diagnosing and fixing common extension and app issues.
+---
+
+When something goes wrong in Novon, it usually falls into one of three categories: Network issues, Extension failures, or Storage corruption.
+
+## <Icon name="Zap" /> Extension Logic Errors
+
+If an extension fails to load or return data, check for these specific error messages in the logs:
+
+| Error Message | Meaning | Solution |
+|---|---|---|
+| `Method "{name}" is not registered` | The `source.js` file is missing a required function. | Ensure you exported all 6 required methods. |
+| `Method {name} timed out after 30s` | The JS logic took too long to execute. | Check for infinite loops or very slow network response parsing. |
+| `Serialization failed: ...` | The JS logic returned an object that couldn't be converted to JSON. | Ensure you are only returning plain objects and arrays. |
+| `SHA-256 mismatch`| The bundle integrity check failed. | The `.novext` file is likely corrupted or tampered with. |
+
+## <Icon name="Zap" /> Network Failures
+
+Novon uses a central `Dio` client to handle all network traffic. 
+
+### Cloudflare Loops
+If you are repeatedly seeing Cloudflare challenges, go to <Icon name="Settings" /> Data Settings and update your **Global User-Agent**. Usually, setting it to a modern Chrome or Safari string helps the bypass logic succeed.
+
+### 403 Forbidden
+This usually means the website is blocking Novon's IP or the User-Agent is recognized as a bot. Try enabling the **WebView Bypass** option if the source supports it.
+
+## <Icon name="Database" /> Storage Issues
+
+### Missing Storage Permission
+On Android, Novon requires access to a folder to save covers and downloads. If downloads are failing, re-run the **Storage Setup** in <Icon name="Settings" /> Data Settings.
+
+### Database Locking
+If the app feels sluggish or hangs on the Splash screen, your local SQLite database might be locked by another process. Restarting the app completely usually resolves this.
+
+<Callout type="danger" title="Last Resort">
+If the app becomes unusable, you can perform a **Wipe Everything** command in the Data Settings. This will delete all local data permanently. 
+</Callout>

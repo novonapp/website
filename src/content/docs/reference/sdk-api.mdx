@@ -1,0 +1,86 @@
+---
+title: SDK API Reference
+description: The complete JavaScript interface for the Extension System.
+---
+
+When a `source.js` script returns data across the bridge, the Dart engine maps those responses to strict Typed data classes. 
+
+## <Icon name="Zap" /> Core Interface
+
+Your extension must export the following high-level functions to the global scope.
+
+### `fetchPopular(page)`
+**Returns:** `Promise<{ novels: Novel[], hasNextPage: boolean }>`  
+Invoked when the user opens the "Popular" browse tab.
+
+### `fetchLatestUpdates(page)`
+**Returns:** `Promise<{ novels: Novel[], hasNextPage: boolean }>`  
+Invoked when the user opens the "Latest" browse tab.
+
+### `search(query, page)`
+**Returns:** `Promise<{ novels: Novel[], hasNextPage: boolean }>`  
+Handles text-based queries from the search bar.
+
+### `fetchNovelDetail(url)`
+**Returns:** `Promise<NovelDetails>`  
+Fetches comprehensive metadata for a specific title.
+
+### `fetchChapterList(url)`
+**Returns:** `Promise<Chapter[]>`  
+Returns an array of chapters. Novon expects these in ascending order.
+
+### `fetchChapterContent(url)`
+**Returns:** `Promise<{ html: string }>`  
+The core extraction method. Returns the cleaned HTML body of a chapter.
+
+---
+
+## <Icon name="Code" /> Data Schemas
+
+### Novel (List View)
+```javascript
+{
+  url: string,        // Absolute URL to the novel detail page
+  title: string,      // Display title
+  coverUrl: string    // Absolute URL to the cover image
+}
+```
+
+### NovelDetails
+```javascript
+{
+  url: string,
+  title: string,
+  author: string,
+  description: string, // Supports raw HTML or plain text
+  status: string,      // 'ongoing', 'completed', 'hiatus', 'dropped', or 'unknown'
+  genres: string[],    // Array of genre strings
+  coverUrl: string
+}
+```
+
+### Chapter
+```javascript
+{
+  url: string,         // Absolute URL to the reader page
+  name: string,        // e.g., "Chapter 1"
+  number: number|null  // Used for tracking progress
+}
+```
+
+---
+
+## <Icon name="Zap" /> The HTTP Client
+
+Novon injects a hardened `http` object for network communication.
+
+### `http.get(url)`
+Performs an asynchronous GET request via the Dart `Dio` client.
+
+```javascript
+const html = await http.get("https://example.com");
+```
+
+<Callout type="info" title="CORS & Headers">
+Requests made via `http.get` are not subject to CORS restrictions. The engine automatically handles session cookies and applies the user's configured Global User-Agent string.
+</Callout>

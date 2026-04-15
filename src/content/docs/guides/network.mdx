@@ -1,0 +1,76 @@
+---
+title: Network & User-Agent
+description: Configuring Novon's robust HTTP layer, Cloudflare bypasses, and Proxies.
+---
+
+Novon uses a highly customized HTTP layer (built on Dart's `Dio`) designed to navigate the hostile networking environments often encountered when indexing aggregators. 
+
+You can configure these low-level settings in **Settings > Network & User-Agent**.
+
+## Cloudflare Bypass Mode
+
+Many novel sites use Cloudflare's Under Attack mode, which blocks standard HTTP requests with a CAPTCHA or JS challenge.
+Novon has a 3-tier strategy for bypassing this.
+
+<Callout type="info" title="How the Auto-Bypass Works">
+1. Novon detects a 403 or 503 response with Cloudflare headers.
+2. It launches an invisible, headless WebView in the background.
+3. The WebView navigates to the URL, solves the JavaScript mathematical challenge, and waits for the clearance cookies (`cf_clearance`).
+4. Novon extracts the cookies and User-Agent from the WebView, saves them to the Dio cookie jar, and retries the original request.
+</Callout>
+
+**Settings Options:**
+- **Auto (Default):** Uses the WebView strategy described above.
+- **Headers Only:** Mimics browser headers without spinning up a WebView. Faster, but fails against moderate/high challenge levels.
+- **Disabled:** Never bypass. Protected requests will immediately fail.
+
+---
+
+## User-Agent Management
+
+A user-agent string tells the website what browser you are using. Novon allows extreme granularity here.
+
+### Global User-Agent
+You can set a global User-Agent string that applies to every request. We provide convenient presets for Chrome (Android/Desktop), Firefox, and Safari iOS.
+
+### Per-Source User-Agent
+Sometimes, an extension will only work if it mimics a specific mobile app or browser. You can override the global User-Agent on a *per-extension* basis.
+
+1. Open **Settings > Network > Per-Source User-Agent Override**.
+2. Tap the `+` button, select the target source, and paste the specific UA string.
+
+---
+
+## Rate Limiting
+
+To prevent getting IP-banned, Novon enforces request rate limits.
+
+**Default Rate Limit:** The global maximum requests-per-second (RPS) per domain (e.g., 2 RPS). 
+Extensions can request their own rate limits in their `manifest.json`, but they cannot exceed this global cap.
+
+---
+
+## DNS-over-HTTPS (DoH)
+
+Some regions or ISPs block novel websites at the DNS level. To bypass this seamlessly without needing a system-wide VPN, Novon supports application-level DoH.
+
+Instead of asking your ISP for the IP address, Novon sends encrypted queries to a trusted provider.
+
+**Supported Providers:**
+- System Default (Off)
+- Cloudflare (`1.1.1.1`)
+- Google (`8.8.8.8`)
+- Custom (Provide your own DoH URL)
+
+---
+
+## Proxies
+
+For complete network rerouting, Novon supports HTTP and SOCKS5 proxies.
+
+1. Toggle **Proxy**.
+2. Select type (HTTP or SOCKS5).
+3. Enter the Host, Port, and optional authentication.
+4. Tap **Test Proxy** to verify the connection.
+
+*Proxy passwords are securely encrypted using native OS keystores (`flutter_secure_storage`).*

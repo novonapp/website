@@ -1,0 +1,17 @@
+---
+title: Extensions FAQ
+description: Common questions about extensions.
+---
+
+### Why did an extension disappear?
+If an extension is removed from the central repository registry, it will be flagged as "Obsolete" within your installed list. This usually occurs if the target source website has permanently shut down or if the extension logic is no longer compatible with modern security challenges.
+
+### How do I write my own extension?
+Comprehensive documentation is available in our [Extension System](/docs/guides/extension-system) guide. Development primarily requires basic JavaScript knowledge and an understanding of our CSS selector bridge.
+
+### Are extensions safe?
+Novon utilizes a strictly sandboxed QuickJS execution environment provided by the `flutter_js` engine. Extensions have no direct access to your device's filesystem, biometric data, or browser DOM. Furthermore, every network request is strictly firewalled to the specific domains whitelisted in the extension's `manifest.json` file.
+
+<Callout type="warning" title="Trust & Security">
+While the environment is sandboxed, we recommend only installing extensions from verified repositories. You can manage and revoke permissions for any extension in the <Icon name="Settings" /> **Security** settings panel.
+</Callout>

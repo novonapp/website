@@ -1,0 +1,269 @@
+---
+title: Extension Example
+description: A complete, production-ready extension example for KolNovel.
+---
+
+This guide provides a full, production-ready example of a Novon extension. We will look at the **KolNovel** extension, which handles a complex Arabic novel site with Cloudflare protection and customized content extraction.
+
+A complete extension consists of three files:
+1.  `manifest.json`: Metadata and configuration.
+2.  `source.js`: The JavaScript logic for scraping.
+3.  `icon.png`: The extension icon (displayed in the Novon browser).
+
+## <Icon name="BookOpen" /> manifest.json
+
+The manifest defines the extension's capabilities, supported domains, and required API version.
+
+```json
+{
+  "id": "com.novon.kolnovel",
+  "name": "KolNovel",
+  "version": "1.3.4",
+  "apiVersion": "2",
+  "minAppVersion": "1.0.0",
+  "lang": "ar",
+  "baseUrl": "https://free.kolnovel.com",
+  "domains": [
+    "kolnovel.com",
+    "www.kolnovel.com",
+    "free.kolnovel.com"
+  ],
+  "categories": ["webnovel", "aggregator"],
+  "nsfw": false,
+  "hasCloudflare": true,
+  "supportsLatest": true,
+  "supportsSearch": true,
+  "supportsFilters": false,
+  "icon": "icon.png",
+  "authorName": "Novon Team"
+}
+```
+
+## <Icon name="Code" /> source.js
+
+Below is the complete implementation of the KolNovel extension. It demonstrates advanced techniques such as:
+*   **Domain Failover**: Handling multiple base URLs.
+*   **Intelligent Extraction**: Using RegEx for noise removal (watermarks, ads).
+*   **Search Optimization**: Handling both raw and encoded queries.
+*   **Node Patching**: Cleaning the DOM before converting to text.
+
+```javascript
+(function () {
+    const PRIMARY_BASE = 'https://free.kolnovel.com';
+    const FALLBACK_BASES = [
+        'https://www.kolnovel.com',
+        'https://kolnovel.com',
+    ];
+
+    /**
+     * Helper to perform GET requests with base URL failover.
+     */
+    async function getWithFallback(pathOrUrl) {
+        const isAbsolute = /^https?:\/\//i.test(pathOrUrl || '');
+        const candidates = [];
+        if (isAbsolute) {
+            candidates.push(pathOrUrl);
+        } else {
+            candidates.push(PRIMARY_BASE + pathOrUrl);
+            FALLBACK_BASES.forEach(base => candidates.push(base + pathOrUrl));
+        }
+
+        let lastError = null;
+        for (const url of candidates) {
+            try {
+                return await http.get(url);
+            } catch (e) {
+                lastError = e;
+            }
+        }
+        if (lastError) throw lastError;
+        throw new Error('No valid URL candidate');
+    }
+
+    function toAbsolute(url) {
+        const raw = (url || '').trim();
+        if (!raw) return '';
+        if (/^https?:\/\//i.test(raw)) return raw;
+        if (raw.startsWith('//')) return `https:${raw}`;
+        if (raw.startsWith('/')) return `${PRIMARY_BASE}${raw}`;
+        return `${PRIMARY_BASE}/${raw}`;
+    }
+
+    /**
+     * Advanced: Pick the best image URL from a node's attributes.
+     */
+    function _pickImageUrl(node) {
+        if (!node) return '';
+        const srcset = node.attr('srcset') || node.attr('data-srcset') || '';
+        if (srcset) {
+            const first = srcset.split(',')[0].trim().split(/\s+/)[0];
+            const u = first.trim();
+            if (u) return toAbsolute(u);
+        }
+        const candidates = [
+            node.attr('data-src'),
+            node.attr('data-lazy-src'),
+            node.attr('src'),
+        ];
+        for (const c of candidates) {
+            if (c) return toAbsolute(c);
+        }
+        return '';
+    }
+
+    /**
+     * Advanced: Clean the DOM of noise before text extraction.
+     */
+    function _cleanChapterDom(root) {
+        if (!root) return;
+        const removeSelectors = [
+            'script', 'style', 'noscript', 'iframe', 'form', 
+            '.ads', '.ad', '.advert', '.banner', '.chapter-nav'
+        ];
+        removeSelectors.forEach(sel => {
+            (root.querySelectorAll(sel) || []).forEach(n => {
+                if (n && typeof n.remove === 'function') n.remove();
+            });
+        });
+    }
+
+    // --- Core Extension Requirements ---
+
+    async function fetchPopular(page) {
+        const path = page === 1 ? '/' : `/page/${page}/`;
+        const html = await getWithFallback(path);
+        const doc = parseHtml(html);
+
+        const novels = doc.querySelectorAll('.bsx').map(element => {
+            const aTag = element.querySelector('a');
+            const imgTag = element.querySelector('img');
+            if (aTag) {
+                return {
+                    url: toAbsolute(aTag.attr('href') || ''),
+                    title: aTag.attr('title') || 'Unknown Title',
+                    coverUrl: _pickImageUrl(imgTag)
+                };
+            }
+            return null;
+        }).filter(n => n !== null);
+
+        return { novels, hasNextPage: novels.length > 0 };
+    }
+
+    async function fetchLatestUpdates(page) {
+        return await fetchPopular(page);
+    }
+
+    async function search(query, page) {
+        const path = page <= 1 ? `/?s=${encodeURIComponent(query)}` : `/page/${page}/?s=${encodeURIComponent(query)}`;
+        const html = await getWithFallback(path);
+        const doc = parseHtml(html);
+
+        const novels = doc.querySelectorAll('.bsx').map(element => {
+            const aTag = element.querySelector('a');
+            if (aTag) {
+                return {
+                    url: toAbsolute(aTag.attr('href') || ''),
+                    title: aTag.attr('title') || 'Unknown Title',
+                    coverUrl: _pickImageUrl(element.querySelector('img'))
+                };
+            }
+            return null;
+        }).filter(n => n !== null);
+
+        return { novels, hasNextPage: novels.length > 0 };
+    }
+
+    async function fetchNovelDetail(novelUrl) {
+        const html = await getWithFallback(toAbsolute(novelUrl));
+        const doc = parseHtml(html);
+
+        return {
+            url: toAbsolute(novelUrl),
+            title: doc.querySelector('h1.entry-title')?.text || 'Unknown Title',
+            author: doc.querySelector('a[href*="/writer/"]')?.text || 'Unknown Author',
+            description: doc.querySelector('.sersys.entry-content')?.text?.trim() || '',
+            status: 'ongoing',
+            genres: doc.querySelectorAll('.genre-info a').map(a => a.text.trim()),
+            coverUrl: _pickImageUrl(doc.querySelector('.seriestu img'))
+        };
+    }
+
+    async function fetchChapterList(novelUrl) {
+        const html = await getWithFallback(toAbsolute(novelUrl));
+        const doc = parseHtml(html);
+
+        const chapters = doc.querySelectorAll('.eplister ul li').map(element => {
+            const aTag = element.querySelector('a');
+            if (aTag) {
+                return {
+                    url: toAbsolute(aTag.attr('href') || ''),
+                    name: aTag.querySelector('.epl-num')?.text + " " + aTag.querySelector('.epl-title')?.text,
+                    number: parseFloat(aTag.querySelector('.epl-num')?.text || '0')
+                };
+            }
+            return null;
+        }).filter(c => c !== null);
+
+        return chapters.reverse(); // Standardize to ascending order
+    }
+
+    async function fetchChapterContent(chapterUrl) {
+        const html = await getWithFallback(toAbsolute(chapterUrl));
+        const doc = parseHtml(html);
+        const content = doc.querySelector('.entry-content');
+        
+        _cleanChapterDom(content);
+
+        // Map paragraphs to a clean HTML string
+        const paragraphs = (content.querySelectorAll('p') || [])
+            .map(p => p.text.trim())
+            .filter(t => t.length > 0 && !t.includes('kolnovel'))
+            .map(t => `<p>${t}</p>`)
+            .join('\n');
+
+        return { html: paragraphs };
+    }
+
+    // Exporting methods to the global scope
+    globalThis.fetchPopular = fetchPopular;
+    globalThis.fetchLatestUpdates = fetchLatestUpdates;
+    globalThis.search = search;
+    globalThis.fetchNovelDetail = fetchNovelDetail;
+    globalThis.fetchChapterList = fetchChapterList;
+    globalThis.fetchChapterContent = fetchChapterContent;
+})();
+```
+
+## <Icon name="Shield" /> Handling Watermarks & Noise
+
+A common challenge when content scraping is dealing with "watermark" text—standalone sentences or tokens injected into the text to track scrapers or promote the source site. These often appear randomly throughout the chapter content.
+
+### 1. Regex Normalization
+In the KolNovel example, we handle noise by defining a robust cleaning function that runs on every paragraph. It uses regular expressions to target:
+*   **Site Branding**: Targets explicit site names like `kolnovel.com`, `ملوك الروايات`, and obfuscated versions like `ko*lno*vel`.
+*   **Dynamic Fragments**: Strips "floating" strings like `. com` that are often used to bypass simple text filters.
+
+```javascript
+function _normalizeParagraphText(text) {
+    return (text || '')
+        .replace(/ko\*?\s*lno\*?\s*vel(?:\s*\.\s*com)?/gi, ' ')
+        .replace(/kolnovel(?:\s*\.\s*com)?/gi, ' ')
+        .replace(/ملوك\s*الروايات/gi, ' ')
+        // Remove standalone ". com" watermarks
+        .replace(/(^|[\s\u00A0])\.?\s*c\s*o\s*m\.?(?=\s|$)/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+```
+
+### 2. Semantic Selection
+Instead of just returning the raw `innerHTML`, we can use `querySelectorAll('p')` to extract content purposefully. This allows us to inspect each paragraph individually and discard it if it matches known noise patterns (e.g., links to other novels, author notes that shouldn't be in the reader, or social media CTAs).
+
+## <Icon name="Library" /> Best Practices
+
+When creating your own extension, follow these patterns:
+1.  **Strict URL Normalization**: Always use `toAbsolute()` for links and images to ensure the Dart client can navigate correctly.
+2.  **Defensive DOM Selection**: Use optional chaining or null checks (`?.`) and fallbacks for selectors, as websites change their structure frequently.
+3.  **Content Cleaning**: Proactively remove noise (scripts, ads, navigation). A clean reader is the #1 feature users care about.
+4.  **Promise-Based I/O**: Use `await http.get()` for all network requests to ensure non-blocking execution in the QuickJS isolate.

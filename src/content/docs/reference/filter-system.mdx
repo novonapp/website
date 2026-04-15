@@ -1,0 +1,36 @@
+---
+title: Filter System
+description: Understanding Advanced Library Filter APIs
+---
+
+By default, an extension only supports generic text search. To support advanced filtering (like sorting modes, genres, or flags), your extensions must natively interact with the app's `NovelFilter` data class.
+
+## The NovelFilter Object
+
+When an advanced search or library filtration loop executes, a `NovelFilter` payload is serialized and sent.
+
+```json
+{
+  "query": "Demon Hero",
+  "sortMode": "lastRead",
+  "sortDirection": "descending",
+  "downloaded": true,
+  "unread": null,
+  "started": true,
+  "completed": null,
+  "categoryId": null
+}
+```
+
+### Supported Sort Modes
+Your source extension does not manually compute library sorts, but it *must* support these string enum modes if you implement `getFilters()`:
+* `alphabetical`
+* `lastRead` 
+* `lastUpdated`
+* `dateAdded`
+* `totalChapters`
+* `unreadChapters`
+
+<Callout type="info" title="Implementation">
+Extensions returning truthy values for `supportsFilters` in their manifest must correctly absorb `sortMode` and `sortDirection` to rewrite their internal website endpoint queries dynamically.
+</Callout>

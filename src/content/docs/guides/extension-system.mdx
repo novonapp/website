@@ -1,0 +1,55 @@
+---
+title: Extension System
+description: Understanding the architecture of Novon's JS runtime and bridge.
+---
+
+Novon is built to be an empty shell. Its capabilities are defined by community-maintained extensions that facilitate communication between the Dart framework and external novel websites.
+
+## <Icon name="Zap" /> Technical Architecture
+
+Novon utilizes the `flutter_js` engine to spawn isolated QuickJS runtimes for every active extension. This ensures that a single crashing extension cannot destabilize the main application UI.
+
+```text
++-------------------------+         +-------------------------------+
+|     Dart Framework      |         |     JavaScript Runtime        |
+| (Flutter + Hive + Dio)  |         |        (QuickJS Engine)       |
++-------------------------+         +-------------------------------+
+|                         |         |                               |
+|  1. Request Library     | ------> |  2. Invoke __callMethod       |
+|                         |         |                               |
+|  4. Ingest JSON result  | <------ |  3. Return Marshaled Data     |
+|                         |         |                               |
++-------------------------+         +-------------------------------+
+             |                                     |
+             |  JS calls globalThis.http.get()     |
+             V                                     V
++-------------------------+         +-------------------------------+
+|      Dart Dio Client    | <------ |      The Novon Bridge       |
+| (CookieJar + User-Agent)|         | (PostMessage Serialization)   |
++-------------------------+         +-------------------------------+
+```
+
+## <Icon name="Code" /> Required Implementation
+
+For an extension to be considered valid by the `ExtensionEngine`, it must register exactly six core functions onto the global scope. Failure to implement any of these will result in a "Method not registered" error during runtime.
+
+The core methods are:
+1. `fetchPopular(page)`: Returns prominent novels on the source's landing page.
+2. `fetchLatestUpdates(page)`: Returns the most recently updated titles.
+3. `search(query, page)`: Handles text searches.
+4. `fetchNovelDetail(url)`: Fetches metadata like author, description, and status.
+5. `fetchChapterList(url)`: Parses the table of contents.
+6. `fetchChapterContent(url)`: The most critical method. Returns the raw HTML content of the chapter text.
+
+## <Icon name="Zap" /> The .novext Bundle
+
+The `.novext` format is a standard ZIP archive. Upon installation, the `ExtensionLoader` validates the internal structure:
+
+* **manifest.json**: Contains the metadata and security hashes.
+* **source.js**: The code entry point.
+* **icon.png**: Visual representation.
+* **tmp/**: A local scratch directory created automatically on the device for extension-specific caching.
+
+<Callout type="info" title="Lazy Initialization">
+To save system memory, runtimes are only spawned when a user interacts with a source. They are disposed immediately if the user switches sources or navigates away.
+</Callout>

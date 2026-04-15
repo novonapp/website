@@ -1,0 +1,139 @@
+---
+title: Creating Extensions
+description: Step-by-step guide to writing a source script for a new novel website.
+---
+
+## Prerequisites
+
+Before starting, you should be familiar with:
+1. **JavaScript (ES6+)**
+2. **HTML & CSS Selectors** (how to inspect elements in Chrome DevTools)
+3. **Regex** (for cleaning up dirty text and watermarks)
+
+## Project Setup
+
+The easiest way to start is by cloning the official extension repository and modifying an existing extension.
+
+```bash
+git clone https://github.com/novon-app/extensions.git
+cd extensions
+```
+
+Inside the `src/` folder, create a new directory for your extension. The name should be the Bundle ID (e.g., `com.novon.mysource`).
+
+---
+
+## Step 1: The Manifest
+
+Create a `manifest.json` file. This tells Novon what your extension is.
+
+```json
+{
+  "id": "com.novon.mysource",
+  "name": "My Source",
+  "version": "1.0.0",
+  "apiVersion": "2",
+  "minAppVersion": "1.0.0",
+  "lang": "en",
+  "baseUrl": "https://mysource.com",
+  "icon": "icon.png"
+}
+```
+*For a full list of valid fields, see the [Manifest Reference](/docs/reference/manifest).*
+
+---
+
+## Step 2: The Logic (`source.js`)
+
+Create a `source.js`. You must implement and assign six specific functions to `globalThis`. 
+
+Here is the absolute minimum skeleton:
+
+```javascript
+(function () {
+    const BASE_URL = 'https://mysource.com';
+
+    async function fetchPopular(page) {
+        // Fetch the HTML
+        const html = await http.get(`${BASE_URL}/popular?page=${page}`);
+        
+        // Use Novon's injected parseHtml helper
+        const doc = parseHtml(html);
+        
+        // Find all novel cards
+        const novels = [];
+        doc.querySelectorAll('.novel-item').forEach(el => {
+            novels.push({
+                url: el.querySelector('a').attr('href'),
+                title: el.querySelector('h3').text,
+                coverUrl: el.querySelector('img').attr('src')
+            });
+        });
+        
+        return { novels: novels, hasNextPage: novels.length > 0 };
+    }
+
+    async function fetchLatestUpdates(page) { /* ... */ }
+    async function search(query, page) { /* ... */ }
+    async function fetchNovelDetail(url) { /* ... */ }
+    async function fetchChapterList(url) { /* ... */ }
+    
+    async function fetchChapterContent(url) {
+        const html = await http.get(url);
+        const doc = parseHtml(html);
+        
+        // Extract JUST the chapter text
+        const content = doc.querySelector('.chapter-content');
+        
+        // Return pure HTML representing the paragraphs
+        return { html: content ? content.innerHTML : '' };
+    }
+
+    // You MUST bind these to globalThis so the app can find them
+    globalThis.fetchPopular = fetchPopular;
+    globalThis.fetchLatestUpdates = fetchLatestUpdates;
+    globalThis.search = search;
+    globalThis.fetchNovelDetail = fetchNovelDetail;
+    globalThis.fetchChapterList = fetchChapterList;
+    globalThis.fetchChapterContent = fetchChapterContent;
+})();
+```
+
+---
+
+## Step 3: Finding CSS Selectors
+
+The hardest part of creating an extension is figuring out *what* to extract.
+
+1. Open the target website in Chrome/Firefox desktop.
+2. In the Network panel, verify the site relies on server-rendered HTML (if it's a React/Vue SPA that loads data via JSON, you have to extract using `JSON.parse(await http.get(api_url))` instead of `parseHtml`).
+3. Right click the element you want (e.g., the title) -> **Inspect**.
+4. Right click the element in the DOM tree -> **Copy -> Copy selector**.
+5. You might get something messy like `#main > div > div.content > ul > li:nth-child(1) > a`. Clean it up to be generic! Like `.content ul li a`.
+
+<Callout type="tip">
+**Handling absolute URLs**
+Many sites use relative URLs for covers (e.g. `<img src="/images/cover.jpg">`). Novon requires absolute URLs. You must manually prefix them with the `BASE_URL` if they don't start with `http`.
+</Callout>
+
+---
+
+## Step 4: DOM Cleanup
+
+Web novel sites are notorious for injecting ads, "Read on our official site" watermarks, and invisible spam into their chapters.
+
+**It is your responsibility to clean the HTML before returning it from `fetchChapterContent`.**
+
+```javascript
+function cleanDom(root) {
+    // Remove unwanted elements
+    const spamSelectors = ['script', 'style', 'iframe', '.ads', '.watermark'];
+    spamSelectors.forEach(sel => {
+        root.querySelectorAll(sel).forEach(node => {
+            if (node.remove) node.remove();
+        });
+    });
+}
+```
+
+*For more advanced text normalization strategies, see [Source Structure](/docs/guides/source-structure).*

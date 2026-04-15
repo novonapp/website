@@ -1,0 +1,30 @@
+---
+title: Contribute
+description: Help build the best open-source novel reader.
+---
+
+Novon is an open-source project, and we welcome contributions of all kinds. Whether you are a developer, a designer, or an avid reader, there are several ways to get involved.
+
+## <Icon name="Zap" /> Ways to Contribute
+
+1. **Write Extensions:** The most impactful way to help is by writing or maintaining JavaScript extensions for your favorite novel websites. Detailed documentation is available in the [Extension System](/docs/guides/extension-system) guide.
+2. **Translate the App:** Novon is a global app. Help us translate the user interface into your native language via our Crowdin or local localization files.
+3. **Report Issues:** Encountered a glitch or a broken extension? Open a detailed report on GitHub.
+4. **Core Development:** Help us improve the Dart/Flutter core. Browse our open issues for a `good first issue` tag to get started.
+
+## <Icon name="Settings" /> Environment Setup
+
+To contribute to the core Dart codebase, follow these steps to prepare your local development environment:
+
+1. **Flutter SDK:** Ensure you have the latest stable Flutter SDK installed.
+2. **Repository:** Clone the official repository: `git clone https://github.com/novon-app/novon.git`.
+3. **Dependencies:** Execute `flutter pub get` to install all required packages.
+4. **Code Generation:** Novon uses `Freezed` and `Drift`. Run the build runner to generate the necessary boilerplate:
+   ```bash
+   dart run build_runner build --delete-conflicting-outputs
+   ```
+5. **Execution:** Connect a device or launch an emulator and run `flutter run`.
+
+## <Icon name="Info" /> Code of Conduct
+
+We are committed to maintaining a respectful and welcoming environment. We encourage all contributors to follow best practices for web scraping and to respect the terms of service of the original content providers.

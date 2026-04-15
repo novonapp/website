@@ -1,0 +1,137 @@
+---
+title: Source Structure Reference
+description: Advanced patterns for writing a robust source.js file.
+---
+
+When building an extension for Novon, the `source.js` code is executed in an isolated QuickJS environment. This means standard browser APIs like `window`, `document`, and DOM manipulation are not inherently available. 
+
+Instead, Novon provides a lightweight, sandboxed version of the DOM via `parseHtml(htmlString)`.
+
+## The `parseHtml()` DOM API
+
+Calling `parseHtml(html)` returns a `Document` node. The nodes support a limited subset of standard HTML DOM methods:
+
+- `node.querySelector(selector)`: Returns specific Node or null.
+- `node.querySelectorAll(selector)`: Returns an Array of Nodes.
+- `node.text`: (Getter) Returns the combined text content.
+- `node.attr(name)`: Returns the value of an attribute (e.g. `href`, `src`).
+- `node.innerHTML`: (Getter/Setter) Returns or modifies inner HTML.
+- `node.remove()`: Removes the node from the tree.
+
+---
+
+## Best Practice Pattern: The KolNovel Example
+
+Below is a breakdown of the architectural patterns used in Novon's official KolNovel extension. This represents the gold standard for robust extension development.
+
+### 1. Fallback URL Resolution
+
+Sites often go down or change their TLD. Hardcoding a single base URL is risky.
+Wrap your HTTP calls in a fallback retry loop.
+
+```javascript
+const PRIMARY_BASE = 'https://free.kolnovel.com';
+const FALLBACK_BASES = ['https://www.kolnovel.com', 'https://kolnovel.com'];
+
+async function getWithFallback(path) {
+    const candidates = [PRIMARY_BASE + path, ...FALLBACK_BASES.map(b => b + path)];
+    let lastError = null;
+    
+    for (const url of candidates) {
+        try { return await http.get(url); } 
+        catch (e) { lastError = e; }
+    }
+    throw lastError;
+}
+```
+
+### 2. Universal Image Picker
+
+Cover images are often hidden in `data-src` for lazy loading, or inside multiple `meta` tags. Create a universal picker function that tries every possible location:
+
+```javascript
+function _pickImageUrl(node) {
+    if (!node) return '';
+    const candidates = [
+        node.attr('data-src'),
+        node.attr('data-lazy-src'),
+        node.attr('src'),
+        node.attr('content'), // For meta tags
+    ];
+    for (const c of candidates) {
+        if (c && !c.startsWith('data:image')) {
+            return toAbsolute(c);
+        }
+    }
+    return '';
+}
+```
+
+### 3. Chapter Text Hard-Cleaning
+
+Many aggregators embed their URL into random paragraphs to deter scraping. Don't just rely on CSS selectors to remove ads. Use Regex to clean paragraph definitions.
+
+```javascript
+function _normalizeParagraphText(text) {
+    return (text || '')
+        // Remove aggregator watermarks
+        .replace(/موقع\s*ملوك\s*الروايات[\s\S]*?(?:\.com|كوم)?/gi, ' ')
+        .replace(/(^|[\s\u00A0])\.?\s*c\s*o\s*m\.?(?=\s|$)/gi, ' ')
+        // Remove pubfuture ads injected as text
+        .replace(/window\.pubfuturetag[\s\S]*?(?:\}|\)|;|$)/gi, ' ')
+        // Remove repeated dashed lines
+        .replace(/---+/g, ' ')
+        // Compress whitespace
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+```
+
+### 4. Noise Identification
+
+Sometimes an entire paragraph is just "Read on novel.com". It should be skipped entirely from the output. 
+
+Create a noise identifier to drop the paragraph if mathematically probable it's spam:
+
+```javascript
+function _isNoiseText(text) {
+    const t = _normalizeParagraphText(text);
+    if (!t) return true;
+    if (t.length <= 2) return true;
+    // Exactly "c o m" watermark
+    if (/^(?:[.\-:|]+\s*)?(?:c\s*o\s*m)\.?$/i.test(t)) return true;
+    // "Chapter 42" written inside the text body
+    if (/^(chapter|الفصل)\b[:\s\d.-]*$/i.test(t)) return true;
+    return false;
+}
+```
+
+### 5. Deduplication and Re-assembly
+
+When returning chapter text, rebuild it cleanly using the extracted, verified paragraphs.
+
+```javascript
+function _paragraphHtmlFrom(node) {
+    // 1. Remove ad nodes
+    _cleanChapterDom(node);
+    
+    // 2. Extract texts
+    const allParagraphs = (node.querySelectorAll('p') || [])
+        .map(p => _normalizeParagraphText(p.text));
+        
+    // 3. Filter noise
+    const kept = allParagraphs.filter(t => !_isNoiseText(t));
+    
+    // 4. Return pure reconstructed HTML
+    if (kept.length >= 2) {
+        return kept.map(t => `<p>${t}</p>`).join('\n');
+    }
+    
+    // Fallback if site doesn't use <p> tags
+    return node.innerHTML;
+}
+```
+
+<Callout type="warning" title="Heavy Re-assembly Risk">
+Only use paragraph re-assembly if the target site aggressively watermarks its content! If the site structure is already clean, it is faster and safer to just call `return { html: node.innerHTML };`.
+</Callout>

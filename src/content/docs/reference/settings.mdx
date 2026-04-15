@@ -1,0 +1,49 @@
+---
+title: Settings Reference
+description: Deep dive into Novon's configuration ecosystem.
+---
+
+Novon provides a massive suite of features controlled entirely locally via the settings panels. All these settings are stored in local key-value databases (`Hive` boxes) safely on your device in plain text mapping.
+
+<Callout type="info" title="Settings Portability">
+You can export all settings to a `novon_settings.json` file to back up your reader configurations, themes, and network preferences independently of your library data.
+</Callout>
+
+### <Icon name="Settings" /> Appearance Settings
+
+The Appearance panel controls the global application UI layout and mapping.
+* **Theme Mode:** Toggle between `Dark`, `Light`, or `System` generated colors.
+* **Pure Black Mode:** Setting this to active swaps the default `#121212` grey background to pure AMOLED `#000000`, turning off the LED pixels to reduce battery overhead during dark rooms.
+* **Navigation Layout:** Modifies the bottom navigation layout (shifting standard padding).
+
+
+### <Icon name="BookOpen" /> Reader Settings
+
+The true core of your Novon experience sits inside the Reader settings mapped directly to `ReaderPreferences.boxName`. Here you control everything relating to the reading overlay:
+
+* **Default Reading Mode:** `vertical_scroll` (standard infinitely scrolling column), `paged` (tap or swipe horizontal generation), or `webtoon` (unbroken borderless image sequences).
+* **Default Font Family:** Modifies text generation for novels globally. Available options: `Alexandria`, `El Messiri`, `Lalezar`, `Merriweather`.
+* **Font Size:** Clamped typically bounded between 10px to 36px with standard scalar increments.
+* **Keep Screen On:** Prevents the device from sleeping regardless of OS timeout values when the reader view is actively mounted on the screen.
+* **Full Screen Mode:** Hides the system navigation and status bars securely during runtime.
+* **Show Reading Progress Bar:** Attaches an absolute positioned bottom progress ticker representing chapter completion.
+* **Volume Button Navigation:** Maps the hardware physical volume buttons to page up/page down gestures.
+
+
+### <Icon name="Database" /> Data & Storage
+
+Because Novon is fully offline and privacy-first, handling local database clusters is explicitly surfaced to users.
+
+* **Storage Location:** Choose the exact system folder hierarchy where internal `downloads`, `covers`, and `cache` backups go. Uses Scoped Storage securely on Android.
+* **Auto-Backup:** Configures automated database dump triggers to execute `daily` or `weekly`.
+* **WebDAV Sync:** Authenticate remote WebDAV credentials (like Nextcloud or rclone payloads) so automatic backups are automatically securely replicated to the cloud.
+* **Clear all cache:** Empties the `DefaultCacheManager` internal temporary memory arrays and drops `chapter_contents` parsing states without destroying your reading history footprint.
+* **Wipe everything:** The Danger Zone. Issues SQL `DELETE` cascades across `history`, `novels`, and `trackerItems` databases and executes irreversible wipe commands.
+
+
+### <Icon name="RefreshCw" /> Tracking Services
+
+Configure mapping APIs so Novon can seamlessly notify 3rd party providers when you finish reading a chapter of a synced novel.
+
+* **Supported Endpoints:** AniList, MyAnimeList, NovelUpdates, Kitsu, and Kavita.
+* **Authentication:** Providers require OAuth2 flows generated using an internal WebView loop that traps the redirected access tokens back safely to your credentials store.

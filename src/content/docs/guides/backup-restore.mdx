@@ -1,0 +1,67 @@
+---
+title: Backup & Restore
+description: Ensure your reading progress and library data are safe.
+---
+
+Novon's backup system is **fully local by default**. There is no centralized cloud account, meaning your data remains solely on your device. 
+
+Backups are plain JSON files that contain everything needed to reconstruct your library on a fresh install, minus the actual downloaded chapter files (which can be re-downloaded from their respective sources).
+
+## Creating a Backup
+
+Go to **Settings > Data & Storage > Backup & Restore > Create Full Backup**.
+
+This creates a highly compressed `.json.gz` file in the `backups/` subfolder of your selected storage directory. The file name usually looks like `novon_backup_YYYYMMDD_HHMMSS.json.gz`.
+
+### What is included in a Full Backup?
+- Novels in your library (metadata, source URL, reading status)
+- Chapters (list of chapters and read progress)
+- Reading history and time spent
+- Custom Categories
+- Library flags (custom display settings per novel, favorite tags)
+- Tracker synchronization settings
+- All App Settings
+
+### Tracker Token Security (OAuth)
+OAuth tokens used for external trackers (e.g., AniList, MyAnimeList) are extremely sensitive. 
+If included in a backup, they are **AES-256 encrypted using a key derived from your specific device's hardware ID**.
+
+<Callout type="warning" title="Cross-Device Restores">
+If you restore a backup onto a _different_ device, your tracker tokens cannot be decrypted. You will need to manually log back into AniList/MyAnimeList in the settings of the new device. All other data will restore perfectly.
+</Callout>
+
+### Custom Backups
+If you only want to backup specific data (e.g., just your App Settings, but not your reading history), use the **Custom Backup…** button to selectively export tables.
+
+---
+
+## Restoring a Backup
+
+Go to **Settings > Data & Storage > Backup & Restore > Restore from File…**.
+
+Select a previously created `.json.gz` or `.json` backup file.
+
+### Restore Modes
+
+When restoring, you must choose how to resolve conflicts with your existing library:
+
+1. **Merge (Default)**: Existing library entries are kept. Backup entries are added. If a novel exists in both, the metadata is overwritten by the backup, but read status is merged safely (if you read Chapter 5 locally but the backup only has Chapter 3, Novon remembers you read Chapter 5).
+2. **Replace (Destructive)**: Your current library is wiped entirely, and the backup is applied totally fresh. You must type `REPLACE` to confirm this action.
+
+---
+
+## Automated Backups
+
+You don't need to remember to press the backup button.
+
+1. Go to **Settings > Data & Storage**.
+2. Enable **Auto-Backup**.
+3. Choose a frequency (Hourly, Daily, Weekly).
+4. Set the **Retention Limit** (e.g., keep the last 5 backups, deleting older ones to save space).
+
+The app uses Android/iOS background task managers to perform this silently.
+
+### WebDAV Cloud Sync
+For true peace of mind, you can push your automated backups to your own cloud server (Nextcloud, ownCloud, or any WebDAV provider).
+
+Toggle **WebDAV Sync**, enter your server URL and credentials, and Novon will upload the latest backup JSON to your server immediately after it generates locally.

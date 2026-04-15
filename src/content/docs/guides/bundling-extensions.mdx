@@ -1,0 +1,178 @@
+---
+title: Bundling Extensions
+description: How to package your extension and use the automated Python bundler.
+---
+
+Extensions in Novon are distributed as `.novext` files.
+
+A `.novext` file is a standard ZIP archive containing the following required files:
+* `manifest.json`
+* `source.js`
+* `icon.png`
+
+While you can bundle extensions manually by compressing these three files into a ZIP archive, managing an entire repository with dozens of sources is more efficient using our automated tooling.
+
+<Callout type="tip" title="Python Tooling">
+Novon provides an official `bundle_extensions.py` script that automates zipping, SHA-256 integrity hashing, and `index.json` registry generation.
+</Callout>
+
+## <Icon name="Zap" /> The Python Bundler
+
+If you host an extension repository, you must maintain an `index.json` file. This registry contains the cryptographic SHA-256 hashes for every extension, allowing the Dart client to verify downloads.
+
+The `bundle_extensions.py` script performs the following tasks:
+1. Iterates through all subdirectories in your source folder.
+2. Packages them into versioned `.novext` bundles.
+3. Computes the required SHA-256 integrity hashes.
+4. Generates a valid `index.json` registry file automatically.
+
+### <Icon name="Code" /> Usage
+
+**Prerequisites:** Python 3.8 or higher.
+
+```bash
+python bundle_extensions.py
+```
+
+### <Icon name="Settings" /> Source Code
+
+Save the following script as `bundle_extensions.py` in the root of your extension repository.
+
+```python
+import os
+import json
+import zipfile
+import hashlib
+import glob
+import datetime
+
+EXTENSIONS_DIR = "src"
+OUTPUT_DIR = "bundles"
+INDEX_FILE = "index.json"
+
+REPO_NAME = "My Custom Extensions"
+REPO_URL = "https://raw.githubusercontent.com/username/my-repo/main/index.json"
+MAINTAINER_URL = "https://github.com/username"
+DOWNLOAD_BASE = "https://raw.githubusercontent.com/username/my-repo/main/bundles"
+ICON_BASE = "https://raw.githubusercontent.com/username/my-repo/main/icons"
+
+def calculate_sha256(filepath):
+    sha256_hash = hashlib.sha256()
+    with open(filepath, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
+
+def ensure_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+def main():
+    print(f"Bundling extensions from {EXTENSIONS_DIR}...")
+    ensure_dir(OUTPUT_DIR)
+    ensure_dir("icons")
+    
+    extensions_registry = []
+    
+    for ext_path in glob.glob(os.path.join(EXTENSIONS_DIR, "*")):
+        if not os.path.isdir(ext_path):
+            continue
+            
+        manifest_path = os.path.join(ext_path, "manifest.json")
+        if not os.path.exists(manifest_path):
+            continue
+            
+        with open(manifest_path, 'r', encoding='utf-8') as f:
+            try:
+                manifest = json.load(f)
+            except json.JSONDecodeError:
+                print(f"Error: Invalid JSON in {manifest_path}")
+                continue
+                
+        ext_id = manifest.get('id')
+        ext_version = manifest.get('version')
+        
+        if not ext_id or not ext_version:
+            print(f"Error: Missing id or version in {ext_id}")
+            continue
+            
+        icon_path = os.path.join(ext_path, manifest.get('icon', 'icon.png'))
+        if os.path.exists(icon_path):
+            import shutil
+            shutil.copy2(icon_path, os.path.join("icons", f"{ext_id}.png"))
+            
+        bundle_name = f"{ext_id}-{ext_version}.novext"
+        bundle_path = os.path.join(OUTPUT_DIR, bundle_name)
+        
+        print(f"Bundling {bundle_name}...")
+        
+        with zipfile.ZipFile(bundle_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for file in os.listdir(ext_path):
+                file_path = os.path.join(ext_path, file)
+                if os.path.isfile(file_path):
+                    zipf.write(file_path, file)
+                    
+        sha256 = calculate_sha256(bundle_path)
+        
+        entry = {
+            "id": ext_id,
+            "name": manifest.get('name'),
+            "version": ext_version,
+            "apiVersion": manifest.get('apiVersion', "2"),
+            "minAppVersion": manifest.get('minAppVersion', "1.0.0"),
+            "lang": manifest.get('lang', "all"),
+            "nsfw": manifest.get('nsfw', False),
+            "hasCloudflare": manifest.get('hasCloudflare', False),
+            "categories": manifest.get('categories', []),
+            "icon": f"{ICON_BASE}/{ext_id}.png",
+            "downloadUrl": f"{DOWNLOAD_BASE}/{bundle_name}",
+            "sha256": sha256,
+            "updatedAt": datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+        }
+        
+        extensions_registry.append(entry)
+        
+    registry = {
+        "repoName": REPO_NAME,
+        "repoUrl": REPO_URL,
+        "maintainerUrl": MAINTAINER_URL,
+        "generated": datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+        "apiVersion": "2",
+        "extensions": extensions_registry
+    }
+    
+    with open(INDEX_FILE, 'w', encoding='utf-8') as f:
+        json.dump(registry, f, indent=2, ensure_ascii=False)
+        
+    print(f"Successfully bundled {len(extensions_registry)} extensions.")
+
+if __name__ == "__main__":
+    main()
+```
+
+## <Icon name="Zap" /> Continuous Deployment
+
+You can host your repository using GitHub Pages or raw Git endpoints. We recommend using a GitHub Action to automate the bundling process whenever you push changes to your main branch.
+
+```yaml
+name: Build Extensions
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Run Bundler
+      run: python bundle_extensions.py
+    - name: Commit Bundles
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Auto-bundle extensions"
+        file_pattern: "bundles/* icons/* index.json"
+```

@@ -1,0 +1,51 @@
+---
+title: Architecture
+description: The high-level architecture of the Novon application.
+---
+
+Novon is built using the **Flutter** framework and utilizes a modular, feature-based architecture. State management is handled through **Riverpod** with a focus on immutability and high-performance reactive updates.
+
+## <Icon name="Zap" /> Technical Stack
+
+* **Framework:** Flutter 3.22 (Stable)
+* **State Management:** Riverpod 2.0 (Code Generation)
+* **Persistence Layer:** Drift (SQLite) for large-scale data and Hive for rapid configuration caching.
+* **Network Stack:** Dio with custom interceptors for proxying and security bypasses.
+* **JavaScript Runtime:** `flutter_js` (QuickJS) running in dedicated isolates.
+
+## <Icon name="Code" /> Layered Design
+
+The codebase residing in `lib/` is organized into five primary layers to maintain a clean separation of concerns.
+
+### 1. Core Layer (`lib/core/`)
+Defines the enterprise business models and contracts. 
+* `models/`: Immutable data classes generated with `Freezed` (e.g., `Novel`, `Chapter`).
+* `repositories/`: Abstract interface definitions for data handling.
+
+### 2. Data Layer (`lib/data/`)
+Handles all external I/O operations and provides concrete implementations for core repositories.
+* `database/`: Contains the Drift SQL schema definitions.
+* `network/`: Logic for the `DioFactory`, including cookie management and domain whitelisting.
+* `services/`: The high-level processing engines: `ExtensionEngine`, `BackupService`, and `StoragePathService`.
+
+### 3. Providers Layer (`lib/providers/`)
+Serves as the glue between the Data and Presentation layers.
+* Uses `@riverpod` annotations to generate reactive states.
+* Caches domain models and exposes `AsyncValue` streams to the UI.
+
+### 4. Features Layer (`lib/features/`)
+The interactive user interface. This is strictly organized by business feature (e.g., `browse/`, `library/`, `reader/`, `settings/`).
+* Contains Flutter Widgets and Feature Controllers.
+* Only interacts with data through Riverpod providers to ensure UI stability.
+
+### 5. Runtime Layer (`lib/runtime/`)
+Handles the low-level bootstrapping of the JavaScript sandbox and native platform channels.
+
+## <Icon name="Zap" /> Extension Lifecycle
+
+The `ExtensionEngine` (`lib/data/services/extension_engine.dart`) manages the runtime lifecycle for every community-maintained source.
+
+1. **Discovery:** Scans the local extensions directory and parses `manifest.json` files into a rapid Hive cache.
+2. **Bootstrapping:** Spawns an isolated `Isolate` containing a QuickJS runtime for the target source.
+3. **Binding:** Injects the `http`, `console`, and `parseHtml` bridge functions into the JS memory space.
+4. **Evaluation:** Executes `source.js` and registers critical methods (like `fetchPopular`) to the internal `__novonExtension` object for future calls.

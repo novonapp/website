@@ -1,0 +1,62 @@
+---
+title: Data Models
+description: Core Dart and JSON models used in Novon
+---
+
+## The Novel Object
+This represents a novel stored in the local Hive and Drift SQL databases securely generated via `freezed`.
+
+```json
+{
+  "id": "com.novon.kolnovel/demon-lord",
+  "sourceId": "com.novon.kolnovel",
+  "url": "https://free.kolnovel.com/novel/demon-lord",
+  "title": "Demon Lord",
+  "author": "Someone",
+  "description": "It was a dark and stormy night...",
+  "coverUrl": "https://cdn.kolnovel.com/cover.jpg",
+  "status": "ongoing",
+  "genres": ["Fantasy", "Action"],
+  "inLibrary": true,
+  "totalChapters": 450,
+  "readChapters": 12,
+  "downloadedChapters": 15,
+  "lastFetched": "2024-05-12T15:30:00Z",
+  "lastRead": "2024-05-13T10:00:00Z"
+}
+```
+
+<Callout type="warning" title="Status Enums">
+The `status` property must map directly to Dart enums: `ongoing`, `completed`, `hiatus`, `dropped`, or `unknown`.
+</Callout>
+
+## The Chapter Object
+This records strict user progression parameters within an individual chapter.
+
+```json
+{
+  "id": "c_420",
+  "novelId": "com.novon.kolnovel/demon-lord",
+  "url": "https://free.kolnovel.com/novel/demon-lord/chapter-1",
+  "name": "Chapter 1: Beginnings",
+  "number": 1.0,
+  "dateUpload": "2024-01-10T12:00:00Z",
+  "read": true,
+  "lastPageRead": 5,
+  "lastScrollOffset": 1520.4,
+  "downloaded": true,
+  "wordCount": 1240
+}
+```
+
+## Chapter Content
+This holds the heavily parsed HTML payloads that the Reader overlay utilizes, separated to prevent slowing down library queries.
+
+```json
+{
+  "chapterId": "c_420",
+  "html": "<p>It was a dark...</p>",
+  "wordCount": 1240,
+  "fetchedAt": "2024-05-13T10:05:00Z"
+}
+```

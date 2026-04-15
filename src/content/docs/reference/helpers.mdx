@@ -1,0 +1,57 @@
+---
+title: JS Helpers
+description: Built-in utility functions and the Dart bridge API.
+---
+
+Novon injects several security-hardened helper functions into the JavaScript context to ensure extensions can parse HTML and communicate with the network easily.
+
+## <Icon name="Zap" /> The HTTP Client
+
+Extensions use the injected `http` object for all network activity. Unlike standard browser `fetch`, this communicates directly with the Dart `Dio` client.
+
+### `http.get(url)`
+Returns a Promise that resolves to a string of raw HTML or raw text.
+
+```javascript
+async function fetchPopular(page) {
+    const response = await http.get("https://example.com/popular?page=" + page);
+    const doc = parseHtml(response);
+    // ... logic
+}
+```
+
+<Callout type="tip" title="Automatic Headers">
+Novon automatically injects the User-Agent currently configured in <Icon name="Settings" /> Data Settings into every request sent via the bridge.
+</Callout>
+
+## <Icon name="Code" /> DOM Parsing
+
+The `parseHtml` function is powered by an internal bundle of `htmlparser2`. Novon patches the resulting document nodes to provide a more intuitive API.
+
+### `parseHtml(html)`
+Takes an HTML string and returns a root Document node.
+
+### Node Methods
+Every node returned by the parser (including results from queries) supports these convenience methods:
+
+| Method | Description |
+|---|---|
+| `.attr(name)` | Gets the value of an attribute (e.g. `href`, `src`). |
+| `.text` | A getter property that returns the combined text content of the node. |
+| `.querySelector(selector)` | Returns the first matching child node. |
+| `.querySelectorAll(selector)` | Returns an array of matching child nodes. |
+
+```javascript
+const doc = parseHtml(html);
+const title = doc.querySelector(".title-class").text;
+const href = doc.querySelector("a").attr("href");
+```
+
+## <Icon name="Settings" /> Debugging
+
+### `console.log(msg)`
+Messages sent to `console.log`, `console.warn`, or `console.error` are piped directly to the Dart developer console. You can view these in real-time by connecting a debugger or checking the internal app logs.
+
+<Callout type="warning" title="Memory Warning">
+Do not perform massive loops with `console.log` during parsing, as serializing large strings across the bridge can cause significant latency in the QuickJS runtime.
+</Callout>

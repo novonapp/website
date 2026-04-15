@@ -1,0 +1,85 @@
+---
+title: Extension Repositories
+description: How to host your own repository of Novon extensions.
+---
+
+While Novon includes an official extension repository by default, anyone can host their own. This is useful for distributing private extensions, NSFW sources, or forks of existing sources.
+
+## Repository Structure
+
+An extension repository requires two things:
+1. An `index.json` file (the registry).
+2. The `.novext` bundle files, hosted over HTTPS.
+
+A typical repository folder structure looks like this:
+
+```
+my-repo/
+├── index.json
+├── icons/
+│   ├── com.example.source1.png
+│   └── com.example.source2.png
+└── bundles/
+    ├── com.example.source1-1.0.0.novext
+    └── com.example.source2-2.1.0.novext
+```
+
+---
+
+## Architecture of `index.json`
+
+The app periodically fetches `index.json` to discover new extensions and updates for installed ones.
+
+```json
+{
+  "repoName": "Novol Custom Extensions",
+  "repoUrl": "https://raw.githubusercontent.com/username/repo/main/index.json",
+  "maintainerUrl": "https://github.com/Username",
+  "generated": "2026-04-14T09:12:00Z",
+  "apiVersion": "2",
+  "extensions": [
+    {
+      "id": "com.novon.kolnovel",
+      "name": "KolNovel",
+      "version": "1.3.4",
+      "apiVersion": "2",
+      "minAppVersion": "1.0.0",
+      "lang": "ar",
+      "nsfw": false,
+      "hasCloudflare": true,
+      "categories": ["webnovel", "aggregator"],
+      "icon": "https://raw.githubusercontent.com/username/repo/main/icons/kolnovel.png",
+      "downloadUrl": "https://raw.githubusercontent.com/username/repo/main/bundles/com.novon.kolnovel-1.3.4.novext",
+      "sha256": "150b3cbbc303cb77123e5d353738bb3aa51d94d67df013883908ec555a2ae8ae",
+      "updatedAt": "2026-04-14T08:25:00Z"
+    }
+  ]
+}
+```
+
+<Callout type="warning" title="Security & Signatures">
+The `sha256` field in the index MUST exactly match the SHA-256 hash of the `.novext` file. Novon verifies this hash during installation. If it doesn't match, the app will reject the installation to prevent Man-in-the-Middle (MITM) attacks.
+</Callout>
+
+---
+
+## Hosting Providers
+
+You **must** host your repository on an HTTPS server.
+
+The easiest and free way to host a repository is via GitHub:
+
+1. Create a public GitHub repository.
+2. Push your `index.json`, `bundles/`, and `icons/` folders.
+3. Your users can add the repository using the Raw URL: `https://raw.githubusercontent.com/username/repo/main/index.json`
+4. Alternatively, enable GitHub Pages to serve it from `https://username.github.io/repo/index.json`.
+
+---
+
+## Automating the Index Generation
+
+Manually updating `index.json` and computing SHA-256 hashes every time you release an update is tedious. 
+
+We provide a Python script that automatically zips your source code, computes the hashes, and writes the `index.json` file for you.
+
+See the [Bundling Extensions](/docs/guides/bundling-extensions) guide for the code.
