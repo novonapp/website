@@ -12,5 +12,7 @@ export const SITE_CONFIG = {
     latestApk: "https://github.com/novonapp/novon/releases/latest",
     discord: null,
     twitter: null,
+    facebook: null,
+    reddit: null,
   }
 };
