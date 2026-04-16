@@ -33,10 +33,11 @@ export const metadata: Metadata = {
     description: SITE_CONFIG.description,
     images: [
       {
-        url: "/banner.png",
-        width: 1200,
+        url: "/banner.jpg",
+        width: 1129,
         height: 630,
         alt: "Novon Documentation Banner",
+        type: "image/jpeg",
       },
     ],
   },
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Novon | Open-source Novel Reader",
     description: SITE_CONFIG.description,
-    images: ["/banner.png"],
+    images: ["/banner.jpg"],
     creator: "@novonapp",
   },
   robots: {
