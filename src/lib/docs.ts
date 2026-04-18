@@ -3,6 +3,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import { createHighlighter, Highlighter } from 'shiki';
 import { SITE_CONFIG } from '@/config/site-config';
+import { getReleases, getLatestRelease } from './github';
 
 const CONTENT_DIR = path.join(process.cwd(), 'src/content/docs');
 
@@ -32,15 +33,41 @@ export async function getDocBySlug(slug: string[]): Promise<DocContent | null> {
   const relPath = slug.join('/') + '.mdx';
   const fullPath = path.join(CONTENT_DIR, relPath);
 
+  if (slug.join('/') === 'general/changelogs') {
+    const releases = await getReleases();
+    let content = ``;
+    if (!releases || releases.length === 0) {
+      content = `No releases found or unable to fetch from GitHub.\n`;
+    } else {
+      releases.forEach((r: any) => {
+        content += `## ${r.name || r.tag_name}\n`;
+        content += `* **Published**: ${new Date(r.published_at).toLocaleDateString()}\n`;
+        content += `* **Tag**: \`${r.tag_name}\`\n\n`;
+        content += `${r.body}\n\n`;
+        content += `---\n\n`;
+      });
+    }
+
+    return {
+      meta: { title: 'Changelogs', description: 'History of Novon releases fetched dynamically from GitHub.' },
+      content,
+      slug,
+    };
+  }
+
   if (!fs.existsSync(fullPath)) return null;
 
   const fileContents = fs.readFileSync(fullPath, 'utf8');
   let { data, content } = matter(fileContents);
 
+  const latestRelease = await getLatestRelease();
+  const dynamicVersion = latestRelease?.tag_name || SITE_CONFIG.version;
+  const dynamicStatus = latestRelease ? (latestRelease.prerelease ? 'Beta' : 'Stable') : SITE_CONFIG.status;
+
   content = content
-    .replaceAll('{{APP_VERSION}}', SITE_CONFIG.version)
+    .replaceAll('{{APP_VERSION}}', dynamicVersion)
     .replaceAll('{{API_VERSION}}', SITE_CONFIG.apiVersion)
-    .replaceAll('{{APP_STATUS}}', SITE_CONFIG.status)
+    .replaceAll('{{APP_STATUS}}', dynamicStatus)
     .replaceAll('{{GITHUB_URL}}', SITE_CONFIG.links.github || '')
     .replaceAll('{{DOWNLOAD_URL}}', SITE_CONFIG.links.latestApk || '');
 

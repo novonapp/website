@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Header from "@/components/Header";
 import { SITE_CONFIG } from "@/config/site-config";
+import { getLatestRelease } from "@/lib/github";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.url),
@@ -65,7 +66,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const release = await getLatestRelease();
+  let version = release?.tag_name || SITE_CONFIG.version;
+  if (version.startsWith('v')) version = version.substring(1);
+  
+  let status = SITE_CONFIG.status;
+  if (release) {
+    if (release.tag_name.toLowerCase().includes('alpha')) status = 'Alpha';
+    else if (release.tag_name.toLowerCase().includes('beta') || release.prerelease) status = 'Beta';
+    else status = 'Stable';
+  }
+
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body>
@@ -86,7 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `}
         </Script>
         <ThemeProvider>
-          <Header />
+          <Header appVersion={version} appStatus={status} />
           {children}
         </ThemeProvider>
       </body>

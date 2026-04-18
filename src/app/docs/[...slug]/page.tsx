@@ -40,9 +40,7 @@ const components = {
   Tabs,
   CodeBlock,
   Icon,
-  AppVersion: () => <span>{SITE_CONFIG.version}</span>,
   ApiVersion: () => <span>{SITE_CONFIG.apiVersion}</span>,
-  AppStatus: () => <span>{SITE_CONFIG.status}</span>,
 };
 
 async function AsyncCodeBlock({ code, lang }: { code: string, lang: string }) {
@@ -60,6 +58,17 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
   const currentPath = `/docs/${resolvedParams.slug.join('/')}`;
   const { prev, next } = findCurrentGroup(currentPath);
 
+  const { getLatestRelease } = await import('@/lib/github');
+  const latestRelease = await getLatestRelease();
+  const dynamicVersion = latestRelease?.tag_name || SITE_CONFIG.version;
+  const dynamicStatus = latestRelease ? (latestRelease.prerelease ? 'Beta' : 'Stable') : SITE_CONFIG.status;
+
+  const mdxComponents = {
+    ...components,
+    AppVersion: () => <span>{dynamicVersion}</span>,
+    AppStatus: () => <span>{dynamicStatus}</span>,
+  };
+
   return (
     <>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -68,7 +77,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
         
         <MDXRemote 
           source={doc.content} 
-          components={components} 
+          components={mdxComponents} 
           options={{
             mdxOptions: {
               remarkPlugins: [remarkGfm],
