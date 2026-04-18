@@ -6,6 +6,7 @@ import { X, Search, ChevronDown, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import SearchModal from './SearchModal';
 import { SITE_CONFIG } from '@/config/site-config';
+import { sidebarData } from '@/lib/docs-data';
 
 const GithubIcon = () => (
   <svg
@@ -82,7 +83,7 @@ const CustomMenuIcon = ({ size = 22 }: { size?: number }) => (
   </svg>
 );
 
-export default function Header() {
+export default function Header({ appVersion = SITE_CONFIG.version, appStatus = SITE_CONFIG.status }: { appVersion?: string, appStatus?: string }) {
   const { theme, toggle } = useTheme();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -125,7 +126,7 @@ export default function Header() {
             <nav className="header-nav" aria-label="Main">
               <details className="nav-version-dropdown">
                 <summary className="nav-version-summary">
-                  <span>Get {SITE_CONFIG.status} v{SITE_CONFIG.version}</span>
+                  <span>Get {appStatus} v{appVersion}</span>
                   <ChevronDown size={14} strokeWidth={2.5} className="nav-version-chevron" />
                 </summary>
                 <div className="nav-version-panel">
@@ -221,7 +222,7 @@ export default function Header() {
 
           <div className="mobile-drawer-content">
             <Link href="/download" className="mobile-version-card" onClick={() => setMobileOpen(false)}>
-              <span>Get {SITE_CONFIG.status} v{SITE_CONFIG.version}</span>
+              <span>Get {appStatus} v{appVersion}</span>
               <Plus size={18} />
             </Link>
 
@@ -229,6 +230,27 @@ export default function Header() {
               <Link href="/docs/guides/getting-started" onClick={() => setMobileOpen(false)}>Docs</Link>
               <Link href="/news" onClick={() => setMobileOpen(false)}>News</Link>
             </nav>
+
+            {pathname.startsWith('/docs') && (
+              <div className="mobile-drawer-docs-nav" style={{ marginTop: '12px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--brand)', marginBottom: '16px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Documentation</div>
+                {sidebarData.map(group => (
+                  <div key={group.title} className="sidebar-group" style={{ marginBottom: '16px' }}>
+                    <div className="sidebar-group-title" style={{ paddingLeft: 0 }}>{group.title}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
+                      {group.links.map(link => (
+                        <Link key={link.href} href={link.href}
+                          className={`sidebar-link ${pathname === link.href ? 'active' : ''}`}
+                          style={{ paddingLeft: '12px' }}
+                          onClick={() => setMobileOpen(false)}>
+                          {link.title}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="mobile-drawer-spacer" />
 
